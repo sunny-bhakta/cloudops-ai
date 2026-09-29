@@ -1,0 +1,14 @@
+name: Build & Push ECR (Disabled Placeholder)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder
+        run: echo "ECR build/push workflow is intentionally disabled for now."

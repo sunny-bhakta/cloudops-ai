@@ -1,1 +1,60 @@
+name: Application CI
 
+on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  application-ci:
+    name: Application CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: apps/api
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------
+      # Setup Node.js (match Docker major)
+      # ---------------------------------------------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+
+      # ---------------------------------------------------------
+      # Install dependencies
+      # ---------------------------------------------------------
+      - name: Install dependencies
+        run: npm ci
+
+      # ---------------------------------------------------------
+      # Lint
+      # ---------------------------------------------------------
+      - name: Lint
+        run: npm run lint
+
+      # ---------------------------------------------------------
+      # Typecheck
+      # ---------------------------------------------------------
+      - name: Typecheck
+        run: npx tsc --project tsconfig.build.json --noEmit
+
+      # ---------------------------------------------------------
+      # Build
+      # ---------------------------------------------------------
+      - name: Build
+        run: npm run build

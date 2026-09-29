@@ -1,0 +1,80 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform.yml"
+
+  push:
+    # TODO: In future, restrict to main after workflow/secrets are stable.
+    # Example:
+    # branches:
+    #   - main
+    branches:
+      - "**"
+    paths:
+      - "infra/terraform/**"
+      - ".github/workflows/terraform.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform Validate and Plan
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: infra/terraform/envs/dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.3"
+
+      - name: Assert AWS secrets are available
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "AWS secrets are missing in this workflow context."
+            echo "If this is a PR from a fork, GitHub does not expose repository secrets to that run."
+            echo "Run from a branch in the main repository, or switch to OIDC/approved workflow pattern."
+            exit 1
+          fi
+
+      # TODO: Migrate to GitHub OIDC for AWS auth (no long-lived access keys).
+      # - Add `id-token: write` under workflow/job permissions.
+      # - Configure AWS IAM role trust for GitHub Actions OIDC provider.
+      # - Replace static key usage with `role-to-assume` in configure-aws-credentials.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Verify AWS credentials
+        run: aws sts get-caller-identity
+
+      - name: Terraform Format Check
+        working-directory: infra/terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -no-color
