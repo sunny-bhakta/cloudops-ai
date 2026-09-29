@@ -4,6 +4,9 @@ const workspaces = [
   '@cloudops/ai-contracts',
   '@cloudops/ai-providers',
   '@cloudops/ai-tools-sdk',
+  '@cloudops/ai-guardrails',
+  '@cloudops/ai-policy',
+  '@cloudops/ai-audit',
   'api',
 ];
 

@@ -1,4 +1,11 @@
-// export * from './tool-executor.js'
-// export * from './tool-execution.service.js'
+export {
+  ToolRegistry,
+} from './tool-registry.js';
 
-export const A = 1;
+export {
+  getServiceHealthTool,
+} from './implementations/get-service-health.tool.js';
+
+export type {
+  RegisteredTool,
+} from './tool-registry.js';

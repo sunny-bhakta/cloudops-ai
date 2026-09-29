@@ -1,10 +1,20 @@
-import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import {
+  ValidationPipe,
+} from '@nestjs/common';
 
-import { AppModule } from './app.module.js';
+import {
+  NestFactory,
+} from '@nestjs/core';
+
+import {
+  AppModule,
+} from './app.module.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app =
+    await NestFactory.create(
+      AppModule,
+    );
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -14,7 +24,16 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(Number(process.env.PORT ?? 3000));
+  const port =
+    Number(
+      process.env.PORT ?? 3000,
+    );
+
+  await app.listen(port);
+
+  console.log(
+    `API listening on port ${port}`,
+  );
 }
 
 void bootstrap();

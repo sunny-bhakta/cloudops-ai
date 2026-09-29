@@ -8,10 +8,15 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+
 import { Type } from 'class-transformer';
 
 export class GenerateMessageDto {
-  @IsIn(['system', 'user', 'assistant'])
+  @IsIn([
+    'system',
+    'user',
+    'assistant',
+  ])
   role!: 'system' | 'user' | 'assistant';
 
   @IsString()
@@ -20,7 +25,9 @@ export class GenerateMessageDto {
 
 export class GenerateDto {
   @IsArray()
-  @ValidateNested({ each: true })
+  @ValidateNested({
+    each: true,
+  })
   @Type(() => GenerateMessageDto)
   messages!: GenerateMessageDto[];
 
