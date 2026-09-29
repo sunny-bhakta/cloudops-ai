@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "isolatedModules": true,
+
+    "declaration": true,
+    "removeComments": true,
+
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+
+    "outDir": "./dist",
+    "incremental": true,
+
+    "strictPropertyInitialization": false,
+
+    "types": ["vitest/globals", "node"]
+  }
+}

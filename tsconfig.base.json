@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "ES2023",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolvePackageJsonExports": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "sourceMap": true,
+    "types": ["node"]
+  }
+}
+
+

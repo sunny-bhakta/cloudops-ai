@@ -1,0 +1,305 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: cloudops-ai-platform-dev
+
+jobs:
+  build-and-push:
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
+
+    steps:
+      # ---------------------------------------------------------
+      # Checkout
+      # ---------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------
+      # Setup Node.js (match Docker major)
+      # ---------------------------------------------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: apps/api/package-lock.json
+
+      # ---------------------------------------------------------
+      # Debug repository
+      # ---------------------------------------------------------
+      - name: Debug repository
+        run: |
+          set -e
+
+          echo "========================================"
+          echo "REPOSITORY DEBUG"
+          echo "========================================"
+
+          echo "Current directory:"
+          pwd
+
+          echo ""
+          echo "Repository root:"
+          ls -lah
+
+          echo ""
+          echo "apps/api:"
+          ls -lah apps/api
+
+          echo ""
+          echo "Git branch:"
+          git branch --show-current
+
+          echo ""
+          echo "Git commit:"
+          git rev-parse HEAD
+
+          echo ""
+          echo "GitHub repository:"
+          echo "$GITHUB_REPOSITORY"
+
+          echo ""
+          echo "GitHub ref:"
+          echo "$GITHUB_REF"
+
+          echo ""
+          echo "GitHub SHA:"
+          echo "$GITHUB_SHA"
+
+      # ---------------------------------------------------------
+      # Debug Node / npm / package files
+      # ---------------------------------------------------------
+      - name: Debug Node and npm
+        working-directory: apps/api
+        run: |
+          set -e
+
+          echo "========================================"
+          echo "NODE / NPM DEBUG"
+          echo "========================================"
+
+          echo "Node:"
+          node --version
+
+          echo "npm:"
+          npm --version
+
+          echo ""
+          echo "Current directory:"
+          pwd
+
+          echo ""
+          echo "Package files:"
+          ls -lah package*.json
+
+          echo ""
+          echo "========================================"
+          echo "PACKAGE.JSON"
+          echo "========================================"
+
+          cat package.json
+
+          echo ""
+          echo "========================================"
+          echo "PACKAGE-LOCK"
+          echo "========================================"
+
+          if [ -f package-lock.json ]; then
+            echo "package-lock.json exists"
+
+            ls -lh package-lock.json
+
+            echo ""
+            echo "Lockfile version:"
+            node -e "const p=require('./package-lock.json'); console.log(p.lockfileVersion)"
+
+            echo ""
+            echo "TypeScript entries:"
+            grep -n '"typescript"' package-lock.json || true
+          else
+            echo "ERROR: package-lock.json NOT FOUND"
+            exit 1
+          fi
+
+          echo ""
+          echo "========================================"
+          echo "TYPESCRIPT"
+          echo "========================================"
+
+          echo "TypeScript in dependencies:"
+          npm pkg get dependencies.typescript
+
+          echo ""
+          echo "TypeScript in devDependencies:"
+          npm pkg get devDependencies.typescript
+
+          echo ""
+          echo "Installed / resolved TypeScript:"
+          npm ls typescript || true
+
+          echo ""
+          echo "Why TypeScript is installed:"
+          npm explain typescript || true
+
+          echo ""
+          echo "========================================"
+          echo "NESTJS"
+          echo "========================================"
+
+          npm ls \
+            @nestjs/common \
+            @nestjs/core \
+            @nestjs/config \
+            @nestjs/platform-express \
+            || true
+
+      # ---------------------------------------------------------
+      # Validate npm lock file
+      # ---------------------------------------------------------
+      - name: Validate npm lock file
+        working-directory: apps/api
+        run: |
+          set -e
+
+          echo "========================================"
+          echo "NPM CI DRY RUN"
+          echo "========================================"
+
+          npm ci --dry-run --verbose
+
+      # ---------------------------------------------------------
+      # Configure AWS credentials
+      # ---------------------------------------------------------
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ---------------------------------------------------------
+      # Verify AWS identity
+      # ---------------------------------------------------------
+      - name: Verify AWS identity
+        run: |
+          echo "========================================"
+          echo "AWS IDENTITY"
+          echo "========================================"
+
+          aws sts get-caller-identity
+
+      # ---------------------------------------------------------
+      # Login to Amazon ECR
+      # ---------------------------------------------------------
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ---------------------------------------------------------
+      # Docker build
+      # ---------------------------------------------------------
+      - name: Build Docker image
+        working-directory: apps/api
+        run: |
+          set -e
+
+          IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+
+          echo "========================================"
+          echo "DOCKER BUILD"
+          echo "========================================"
+
+          echo "Image:"
+          echo "$IMAGE"
+
+          echo ""
+          echo "Docker version:"
+          docker --version
+
+          echo ""
+          echo "Build context:"
+          pwd
+
+          echo ""
+          echo "Dockerfile:"
+          ls -lah Dockerfile
+
+          echo ""
+          echo "Build:"
+          docker build \
+            --progress=plain \
+            -t "$IMAGE" \
+            .
+
+      # ---------------------------------------------------------
+      # Verify Docker image
+      # ---------------------------------------------------------
+      - name: Inspect Docker image
+        run: |
+          IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+
+          echo "========================================"
+          echo "DOCKER IMAGE"
+          echo "========================================"
+
+          docker image inspect "$IMAGE"
+
+          echo ""
+          echo "Image size:"
+          docker image ls "$IMAGE"
+
+      # ---------------------------------------------------------
+      # Push image to ECR
+      # ---------------------------------------------------------
+      - name: Push Docker image
+        run: |
+          set -e
+
+          IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+
+          echo "========================================"
+          echo "PUSHING IMAGE"
+          echo "========================================"
+
+          echo "Image:"
+          echo "$IMAGE"
+
+          docker push "$IMAGE"
+
+      # ---------------------------------------------------------
+      # Show final image
+      # ---------------------------------------------------------
+      - name: Show image
+        run: |
+          IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
+
+          echo "========================================"
+          echo "IMAGE PUSHED SUCCESSFULLY"
+          echo "========================================"
+
+          echo "Image:"
+          echo "$IMAGE"
+
+          echo ""
+          echo "Repository:"
+          echo "${{ env.ECR_REPOSITORY }}"
+
+          echo ""
+          echo "Tag:"
+          echo "${{ github.sha }}"
+
+          echo ""
+          echo "AWS Region:"
+          echo "${{ env.AWS_REGION }}"
