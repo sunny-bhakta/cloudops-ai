@@ -1,2 +1,5 @@
-// Intentionally minimal package scaffold.
-export {};
+export {
+    AuditLogger,
+    ConsoleAuditSink,
+    MemoryAuditSink
+} from './audit.js';

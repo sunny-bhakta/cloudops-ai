@@ -13,6 +13,10 @@
     "./llm-provider": {
       "types": "./dist/llm.provider.d.ts",
       "import": "./dist/llm.provider.js"
+    },
+    "./audit-types": {
+      "types": "./dist/audit.types.d.ts",
+      "import": "./dist/audit.types.js"
     }
   },
   "scripts": {
