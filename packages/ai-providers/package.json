@@ -17,8 +17,5 @@
   "dependencies": {
     "@cloudops/ai-contracts": "0.1.0",
     "groq-sdk": "^0.37.0"
-  },
-  "devDependencies": {
-    "typescript": "^6.0.2"
   }
 }

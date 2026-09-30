@@ -1,17 +1,17 @@
-export interface ToolAction {
-    tool: string;
-    input: Record<string, unknown>;
-    result: unknown;
-}
+// export interface ToolAction {
+//     tool: string;
+//     input: Record<string, unknown>;
+//     result: unknown;
+// }
 
 
-export interface AiChatResponse {
-  content: string;
+// export interface AiChatResponse {
+//   content: string;
 
-  toolActions: ToolAction[];
+//   toolActions: ToolAction[];
 
-  metadata: {
-    requestId: string;
-    safety: 'allowed' | 'blocked';
-  };
-}
+//   metadata: {
+//     requestId: string;
+//     safety: 'allowed' | 'blocked';
+//   };
+// }

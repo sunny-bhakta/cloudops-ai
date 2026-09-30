@@ -1,19 +1,19 @@
-// export interface AiTool<TInput = unknown, TOutput = unknown> {
-//   name: string;
+export type AiRole =
+  | 'operator'
+  | 'admin'
+  | 'viewer';
 
-//   description: string;
+export interface AiRequestContext {
+  requestId: string;
+  role: AiRole;
+}
 
-//   inputSchema: Record<string, unknown>;
+export interface AiToolContext {
+  request: AiRequestContext;
+}
 
-//   execute(input: TInput): Promise<TOutput>;
-
-//   permission: string;
-
-//   timeoutMs: number;
-
-//   retry: {
-//     maxAttempts: number;
-//   };
-
-//   idempotent: boolean;
-// }
+export interface AiToolDefinition {
+  name: string;
+  description: string;
+  allowedRoles: AiRole[];
+}

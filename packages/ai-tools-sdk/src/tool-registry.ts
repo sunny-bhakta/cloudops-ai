@@ -1,34 +1,52 @@
-// import { Injectable } from '@nestjs/common';
+import type {
+  AiRole,
+  AiToolDefinition,
+} from '@cloudops/ai-contracts';
 
-// import { GetServiceHealthTool } from './implementations/get-service-health.tool.js';
-// import { TriggerDeployTool } from './implementations/trigger-deploy.tool.js';
-// import { AiTool } from '@cloudops/ai-contracts/tools';
+import {
+  getServiceHealthTool,
+} from './implementations/get-service-health.tool.js';
 
-// @Injectable()
-// export class ToolRegistry {
-//   private readonly tools = new Map<string, AiTool>();
+export interface RegisteredTool {
+  definition: AiToolDefinition;
+  tool: typeof getServiceHealthTool;
+}
 
-//   constructor(
-//     private readonly getServiceHealthTool: GetServiceHealthTool,
-//     private readonly triggerDeployTool: TriggerDeployTool,
-//   ) {
-//     this.register(getServiceHealthTool);
-//     this.register(triggerDeployTool);
-//   }
+const registeredTools: RegisteredTool[] = [
+  {
+    definition: {
+      name: 'get_service_health',
+      description:
+        'Get the current health status of a CloudOps service.',
+      allowedRoles: [
+        'operator',
+        'admin',
+      ],
+    },
 
-//   register(tool: AiTool): void {
-//     this.tools.set(tool.name, tool);
-//   }
+    tool: getServiceHealthTool,
+  },
+];
 
-//   get(name: string): AiTool | undefined {
-//     return this.tools.get(name);
-//   }
+export class ToolRegistry {
+  getAll(): RegisteredTool[] {
+    return registeredTools;
+  }
 
-//   has(name: string): boolean {
-//     return this.tools.has(name);
-//   }
+  getAllowedForRole(
+    role: AiRole,
+  ): RegisteredTool[] {
+    return registeredTools.filter((registeredTool) =>
+      registeredTool.definition.allowedRoles.includes(role),
+    );
+  }
 
-//   list(): string[] {
-//     return Array.from(this.tools.keys());
-//   }
-// }
+  getByName(
+    name: string,
+  ): RegisteredTool | undefined {
+    return registeredTools.find(
+      (registeredTool) =>
+        registeredTool.definition.name === name,
+    );
+  }
+}
