@@ -12,6 +12,7 @@ export type {
   AiRequestContext,
   AiToolContext,
   AiToolDefinition,
+  AiTool
 } from './tools.types.js';
 
 
@@ -29,3 +30,10 @@ export type {
   GuardrailContext,
   GuardrailEngineOptions
 } from './guardrails.types.js';
+
+
+export type {
+  ToolPermission,
+  ToolRetryPolicy,
+  ToolSecurityContract,
+} from './tool-security.types.js';

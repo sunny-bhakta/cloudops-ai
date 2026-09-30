@@ -10,7 +10,7 @@
 ### 1) 
 GET {{host}}/health
 
-### 2) 
+### 2) Create incident
 POST {{host}}/ai/generate
 Content-Type: application/json
 X-Request-Id: ai-chat-health-001
@@ -20,10 +20,58 @@ X-Ai-Role: operator
   "messages": [
     {
       "role": "user",
-      "content": "Hello, who are you?"
+      "content": "Deployment Failed create incident?"
     }
   ]
 }
+
+### Trigger Deployment
+POST {{host}}/ai/generate
+Content-Type: application/json
+X-Request-Id: ai-deploy-test-001
+X-Ai-Role: operator
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Trigger a deployment for the payments service in staging using version v1.4.2."
+    }
+  ]
+}
+
+
+### Health
+POST {{host}}/ai/generate
+Content-Type: application/json
+X-Request-Id: ai-health-test-001
+X-Ai-Role: operator
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Check the current health of the payments service."
+    }
+  ]
+}
+
+### No tools
+POST {{host}}/ai/generate
+Content-Type: application/json
+X-Request-Id: ai-chat-test-001
+X-Ai-Role: operator
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Explain what Kubernetes is."
+    }
+  ]
+}
+
+
 
 ### 3) Normal Question
 POST {{host}}/ai/generate

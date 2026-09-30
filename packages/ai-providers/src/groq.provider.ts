@@ -23,42 +23,107 @@ export class GroqProvider implements LlmProvider {
     this.defaultModel = options.defaultModel;
   }
 
-  async generate(request: LlmRequest): Promise<LlmResponse> {
-    const response = await this.client.chat.completions.create({
-      model: request.model ?? this.defaultModel,
-      messages: request.messages,
-      temperature: request.temperature,
-    });
+  async generate(
+    request: LlmRequest,
+    // tools: RegisteredTool[] = [], later replace with RegisteredTool
+    tools: any[] = [],
+  ): Promise<LlmResponse> {
+    const availableTools = tools ?? [];
+
+    const response =
+      await this.client.chat.completions.create({
+        model: request.model ?? this.defaultModel,
+        messages: request.messages,
+        temperature: request.temperature,
+
+        ...(availableTools.length > 0
+          ? {
+            tools: availableTools.map((registeredTool) => ({
+              type: 'function' as const,
+              function: {
+                name: registeredTool.tool.name,
+                description:
+                  registeredTool.tool.description,
+                parameters:
+                  registeredTool.tool.schema,
+              },
+            })),
+
+            tool_choice: 'auto' as const,
+          }
+          : {}),
+      });
 
     const choice = response.choices[0];
 
-    if (!choice?.message?.content) {
+    if (!choice?.message) {
       throw new Error('Groq returned an empty response');
     }
 
-    return {
-      content: choice.message.content,
+    const toolCalls =
+      choice.message.tool_calls?.map((toolCall) => ({
+        id: toolCall.id,
+        name: toolCall.function.name,
+        arguments: toolCall.function.arguments,
+      }));
+
+    const finalResult =  {
+      content: choice.message.content ?? null,
+
       model: response.model,
+
+      toolCalls:
+        toolCalls && toolCalls.length > 0
+          ? toolCalls
+          : undefined,
+
       usage: response.usage
         ? {
-            promptTokens: response.usage.prompt_tokens,
-            completionTokens: response.usage.completion_tokens,
-            totalTokens: response.usage.total_tokens,
-          }
+          promptTokens: response.usage.prompt_tokens,
+          completionTokens:
+            response.usage.completion_tokens,
+          totalTokens:
+            response.usage.total_tokens,
+        }
         : undefined,
     };
+
+    console.log('GroqProvider.generate: finalResult -> start :', finalResult);
+    console.log(finalResult);
+    console.log('GroqProvider.generate: finalResult -> end.');
+
+    return finalResult;
   }
+
+
+  // async generate_old(request: LlmRequest, tools: any): Promise<LlmResponse> {
+  //   const response = await this.client.chat.completions.create({
+  //     model: request.model ?? this.defaultModel,
+  //     messages: request.messages,
+  //     temperature: request.temperature,
+  //   });
+
+  //   const choice = response.choices[0];
+
+  //   if (!choice?.message?.content) {
+  //     throw new Error('Groq returned an empty response');
+  //   }
+
+  //   return {
+  //     content: choice.message.content,
+  //     model: response.model,
+  //     usage: response.usage
+  //       ? {
+  //           promptTokens: response.usage.prompt_tokens,
+  //           completionTokens: response.usage.completion_tokens,
+  //           totalTokens: response.usage.total_tokens,
+  //         }
+  //       : undefined,
+  //   };
+  // }
 }
 
 
-
-// import { Injectable } from '@nestjs/common';
-// import { ChatGroq } from '@langchain/groq';
-// import type {
-//   LlmProvider,
-//   LlmRequest,
-//   LlmResponse,
-// } from '@cloudops/ai-contracts';
 
 // @Injectable()
 // export class GroqProvider implements LlmProvider {
@@ -106,12 +171,7 @@ export class GroqProvider implements LlmProvider {
 // //   ToolMessage,
 // // } from '@langchain/core/messages';
 
-// // import {
-// //   LlmMessage,
-// //   LlmProvider,
-// //   LlmRequest,
-// //   LlmResponse,
-// // } from '@cloudops/ai-contracts/llm-provider';
+
 
 // // @Injectable()
 // // export class GroqProvider implements LlmProvider {

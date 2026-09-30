@@ -12,6 +12,7 @@ export interface LlmRequest {
   messages: LlmMessage[];
   model?: string;
   temperature?: number;
+  systemPrompt?: string;
 }
 
 export interface LlmUsage {
@@ -21,13 +22,21 @@ export interface LlmUsage {
 }
 
 export interface LlmResponse {
-  content: string;
+  content: string | null;
   model: string;
   usage?: LlmUsage;
+  toolCalls?: {
+    id: string;
+    name: string;
+    arguments:string;
+    // tool: string;
+    // input: Record<string, unknown>;
+    // result: unknown;
+  }[] | undefined;
 }
 
 export interface LlmProvider {
-  generate(
-    request: LlmRequest,
-  ): Promise<LlmResponse>;
+  // TODO instead of tool:any use generinc type defined in another package
+  generate(request: LlmRequest, tools: any): Promise<LlmResponse>;
+  // chat(request: LlmRequest): Promise<LlmResponse>;
 }

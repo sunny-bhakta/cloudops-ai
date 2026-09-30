@@ -12,7 +12,7 @@ import {
 
 import {
 	AiModule,
-} from './ai/ai.module.js';
+} from './modules/ai/ai.module.js';
 
 @Module({
 	imports: [
