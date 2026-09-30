@@ -13,3 +13,19 @@ export type {
   AiToolContext,
   AiToolDefinition,
 } from './tools.types.js';
+
+
+export type {
+  AuditEventType,
+  AuditEvent,
+  AuditSink,
+  AuditLoggerOptions
+} from './audit.types.js';
+
+export type {
+  GuardrailAction,
+  Guardrail,
+  GuardrailResult,
+  GuardrailContext,
+  GuardrailEngineOptions
+} from './guardrails.types.js';

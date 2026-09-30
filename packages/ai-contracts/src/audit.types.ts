@@ -1,45 +1,42 @@
-// export type AuditActorRole =
-// 	| 'admin'
-// 	| 'operator'
-// 	| 'viewer'
-// 	| 'system';
+export type AuditEventType =
+  | "generation.started"
+  | "generation.completed"
+  | "generation.failed"
+  | "tool.started"
+  | "tool.completed"
+  | "tool.failed"
+  | "guardrail.blocked";
 
-// export type AuditEventType =
-// 	| 'AI_REQUEST_STARTED'
-// 	| 'AI_REQUEST_BLOCKED'
-// 	| 'AI_TOOL_EXECUTED'
-// 	| 'AI_REQUEST_COMPLETED'
-// 	| 'AI_REQUEST_FAILED';
+export interface AuditEvent {
+  id: string;
+  type: AuditEventType;
+  timestamp: string;
 
-// export interface AuditActor {
-// 	id: string;
-// 	role: AuditActorRole;
-// }
+  requestId?: string;
+  userId?: string;
+  agentId?: string;
 
-// export interface AuditEvent<
-// 	TData extends Record<string, unknown> = Record<string, unknown>,
-// > {
-// 	id: string;
-// 	timestamp: string;
-// 	correlationId: string;
-// 	eventType: AuditEventType;
-// 	actor: AuditActor;
-// 	data: TData;
-// }
+  provider?: string;
+  model?: string;
+  toolName?: string;
 
-// export interface CreateAuditEventInput<
-// 	TData extends Record<string, unknown> = Record<string, unknown>,
-// > {
-// 	correlationId: string;
-// 	eventType: AuditEventType;
-// 	actor: AuditActor;
-// 	data: TData;
-// }
+  input?: unknown;
+  output?: unknown;
+  metadata?: Record<string, unknown>;
 
-// export interface AuditStore {
-// 	append(event: AuditEvent): Promise<void>;
-// 	listByCorrelationId(
-// 		correlationId: string,
-// 	): Promise<AuditEvent[]>;
-// 	listAll(limit?: number): Promise<AuditEvent[]>;
-// }
+  durationMs?: number;
+  error?: {
+    name: string;
+    message: string;
+  };
+}
+
+export interface AuditSink {
+  write(event: AuditEvent): Promise<void>;
+}
+
+export interface AuditLoggerOptions {
+  sink: AuditSink;
+  redact?: (value: unknown) => unknown;
+}
+

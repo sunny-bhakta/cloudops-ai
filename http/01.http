@@ -1,0 +1,121 @@
+@localHost = http://localhost:3000
+@albHost = http://cloudops-ai-platform-dev-alb-1933079246.ap-south-1.elb.amazonaws.com
+@host = {{localHost}}
+@approvalId = REPLACE_WITH_APPROVAL_ID
+
+### ----------------------------------------------------------------
+### Baseline smoke
+### ----------------------------------------------------------------
+
+### 1) 
+GET {{host}}/health
+
+### 2) 
+POST {{host}}/ai/generate
+Content-Type: application/json
+X-Request-Id: ai-chat-health-001
+X-Ai-Role: operator
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello, who are you?"
+    }
+  ]
+}
+
+### 3) Normal Question
+POST {{host}}/ai/generate
+Content-Type: application/json
+X-Request-Id: ai-chat-test-002
+X-Ai-Role: operator
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "What is the capital of France?"
+    }
+  ]
+}
+
+
+### 4) Conversation with multiple messages
+POST {{host}}/ai/generate
+Content-Type: application/json
+X-Request-Id: ai-chat-test-003
+X-Ai-Role: operator
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "My name is Alex."
+    },
+    {
+      "role": "assistant",
+      "content": "Nice to meet you, Alex."
+    },
+    {
+      "role": "user",
+      "content": "What is my name?"
+    }
+  ]
+}
+
+### 5)
+POST {{host}}/ai/generate
+Content-Type: application/json
+X-Request-Id: ai-chat-health-004
+X-Ai-Role: operator
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Respond with exactly: HEALTHY"
+    }
+  ]
+}
+
+### 5) Test Validation
+POST {{host}}/ai/generate
+Content-Type: application/json
+X-Request-Id: ai-chat-invalid-001
+X-Ai-Role: operator
+
+{
+  "messages": []
+}
+
+### 6) Mailformed request
+POST {{host}}/ai/generate
+Content-Type: application/json
+X-Request-Id: ai-chat-invalid-002
+X-Ai-Role: operator
+
+{
+  "messages": [
+    {
+      "role": "invalid",
+      "content": "Hello"
+    }
+  ]
+}
+
+
+### 6) add two numbers
+POST {{host}}/ai/generate
+Content-Type: application/json
+X-Request-Id: ai-tool-test-001
+X-Ai-Role: operator
+
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Use the calculator tool to calculate 125 * 48."
+    }
+  ]
+}
